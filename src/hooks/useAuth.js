@@ -11,10 +11,6 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase.js'
 
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-// Brave bloque les bounce-redirects (accounts.google.com → firebaseapp.com)
-// ET bloque les popups. On détecte Brave pour afficher des instructions spéciales.
 export function isBrave() {
   try { return !!navigator.brave } catch { return false }
 }
@@ -26,9 +22,10 @@ export function useAuth() {
   const [braveBlocked, setBraveBlocked] = useState(false)
 
   useEffect(() => {
+    // Récupère le résultat après un signInWithRedirect
     getRedirectResult(auth)
       .then((result) => { if (result?.user) setUser(result.user) })
-      .catch((e) => { if (e.code !== 'auth/null-user') setError(e.message) })
+      .catch((e) => { if (e.code !== 'auth/null-user') console.warn('redirect result:', e.code) })
 
     const unsub = onAuthStateChanged(auth, (u) => { setUser(u ?? null) })
     return unsub
@@ -37,28 +34,27 @@ export function useAuth() {
   async function loginGoogle() {
     setLoading(true); setError(null); setBraveBlocked(false)
     try {
-      if (isMobile) {
-        // Mobile : redirect direct (popup bloqué sur iOS Safari)
-        await signInWithRedirect(auth, googleProvider)
-        return
-      }
-      // Desktop (Brave inclus) : essaie popup d'abord
+      // signInWithPopup fonctionne sur tous les navigateurs modernes (desktop + mobile)
+      // quand déclenché par un geste utilisateur direct (bouton click).
+      // Safari ITP bloque signInWithRedirect mais autorise les popups depuis un geste.
       await signInWithPopup(auth, googleProvider)
     } catch (e) {
       if (
         e.code === 'auth/popup-blocked' ||
-        e.code === 'auth/popup-closed-by-user' ||
         e.code === 'auth/cancelled-popup-request'
       ) {
         if (isBrave()) {
-          // Brave bloque le popup ET le redirect — on affiche les instructions
+          // Brave bloque tout — afficher les instructions shields
           setBraveBlocked(true)
           setLoading(false)
         } else {
-          // Autre navigateur : bascule sur redirect
+          // Autre navigateur avec popup bloqué → essaie redirect
           try { await signInWithRedirect(auth, googleProvider) }
           catch (e2) { setError(e2.message); setLoading(false) }
         }
+      } else if (e.code === 'auth/popup-closed-by-user') {
+        // L'utilisateur a fermé la fenêtre — pas une erreur
+        setLoading(false)
       } else {
         setError(e.message)
         setLoading(false)
