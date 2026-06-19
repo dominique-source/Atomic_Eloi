@@ -39,7 +39,36 @@ function IslandBackdrop() {
   )
 }
 
-export default function LoginScreen({ onLoginGoogle, onLoginEmail, onRegister, error, loading }) {
+function BraveInstructions() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      style={{
+        background: 'rgba(255,140,0,0.12)',
+        border: '1px solid rgba(255,140,0,0.6)',
+        borderRadius: 10, padding: '14px 16px',
+        fontFamily: 'var(--font-mono)', fontSize: 11,
+        lineHeight: 1.8, marginBottom: 4,
+      }}>
+      <div style={{ color: '#FF8C00', fontWeight: 700, marginBottom: 6, fontSize: 12 }}>
+        🦁 Brave bloque les popups Google
+      </div>
+      <div style={{ color: 'var(--muted)', marginBottom: 8 }}>
+        Pour activer Google sur Brave, fais <strong style={{ color: 'var(--text)' }}>l'une</strong> de ces options :
+      </div>
+      <div style={{ color: 'var(--text)', marginBottom: 4 }}>
+        <span style={{ color: '#FF8C00' }}>A)</span> Clique sur le <strong>lion 🦁</strong> dans la barre d'adresse
+        → <em>Shields are UP</em> → mets sur <strong>DOWN</strong> pour ce site
+      </div>
+      <div style={{ color: 'var(--text)' }}>
+        <span style={{ color: '#FF8C00' }}>B)</span> Utilise le formulaire <strong>Courriel / Mot de passe</strong> ci-dessous
+      </div>
+    </motion.div>
+  )
+}
+
+export default function LoginScreen({ onLoginGoogle, onLoginEmail, onRegister, error, loading, braveBlocked }) {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -136,6 +165,8 @@ export default function LoginScreen({ onLoginGoogle, onLoginEmail, onRegister, e
           <IconBrandGoogle size={20} color="#EA4335" />
           CONTINUER AVEC GOOGLE
         </motion.button>
+
+        {braveBlocked && <BraveInstructions />}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />

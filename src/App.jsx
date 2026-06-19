@@ -118,7 +118,7 @@ function SyncDot({ syncing }) {
 function AppInner() {
   const [tab, setTab] = useState('home')
   const [levelUpAnim, setLevelUpAnim] = useState(false)
-  const { user, error, loading: authLoading, loginGoogle, loginEmail, registerEmail, logout } = useAuth()
+  const { user, error, loading: authLoading, braveBlocked, loginGoogle, loginEmail, registerEmail, logout } = useAuth()
 
   const {
     challenges, completed, progress, totalXP, streak,
@@ -162,6 +162,7 @@ function AppInner() {
         onRegister={registerEmail}
         error={error}
         loading={authLoading}
+        braveBlocked={braveBlocked}
       />
     )
   }

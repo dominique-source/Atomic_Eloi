@@ -11,10 +11,11 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase.js'
 
-// Brave détecte comme Desktop mais bloque les popups OAuth — redirect est plus fiable universellement
-const useRedirect = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || isBrave()
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
-function isBrave() {
+// Brave bloque les bounce-redirects (accounts.google.com → firebaseapp.com)
+// ET bloque les popups. On détecte Brave pour afficher des instructions spéciales.
+export function isBrave() {
   try { return !!navigator.brave } catch { return false }
 }
 
@@ -22,6 +23,7 @@ export function useAuth() {
   const [user, setUser] = useState(undefined)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [braveBlocked, setBraveBlocked] = useState(false)
 
   useEffect(() => {
     getRedirectResult(auth)
@@ -33,12 +35,14 @@ export function useAuth() {
   }, [])
 
   async function loginGoogle() {
-    setLoading(true); setError(null)
+    setLoading(true); setError(null); setBraveBlocked(false)
     try {
-      if (useRedirect) {
+      if (isMobile) {
+        // Mobile : redirect direct (popup bloqué sur iOS Safari)
         await signInWithRedirect(auth, googleProvider)
         return
       }
+      // Desktop (Brave inclus) : essaie popup d'abord
       await signInWithPopup(auth, googleProvider)
     } catch (e) {
       if (
@@ -46,9 +50,19 @@ export function useAuth() {
         e.code === 'auth/popup-closed-by-user' ||
         e.code === 'auth/cancelled-popup-request'
       ) {
-        try { await signInWithRedirect(auth, googleProvider) }
-        catch (e2) { setError(e2.message); setLoading(false) }
-      } else { setError(e.message); setLoading(false) }
+        if (isBrave()) {
+          // Brave bloque le popup ET le redirect — on affiche les instructions
+          setBraveBlocked(true)
+          setLoading(false)
+        } else {
+          // Autre navigateur : bascule sur redirect
+          try { await signInWithRedirect(auth, googleProvider) }
+          catch (e2) { setError(e2.message); setLoading(false) }
+        }
+      } else {
+        setError(e.message)
+        setLoading(false)
+      }
     }
   }
 
@@ -70,5 +84,5 @@ export function useAuth() {
 
   async function logout() { await signOut(auth) }
 
-  return { user, error, loading, loginGoogle, loginEmail, registerEmail, logout }
+  return { user, error, loading, braveBlocked, loginGoogle, loginEmail, registerEmail, logout }
 }
