@@ -12,6 +12,49 @@ import LoginScreen from './components/LoginScreen.jsx'
 import { useDaily } from './hooks/useDaily.js'
 import { useAuth } from './hooks/useAuth.js'
 import { getLevel } from './hooks/useXP.js'
+import { FIREBASE_CONFIG_MISSING } from './firebase.js'
+
+function FirebaseConfigScreen() {
+  return (
+    <div style={{
+      minHeight: '100dvh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: '#15103A', padding: '32px 24px', textAlign: 'center',
+    }}>
+      <div style={{
+        background: 'rgba(255,77,109,0.12)', border: '2px solid #FF4D6D',
+        borderRadius: 12, padding: '28px 24px', maxWidth: 420,
+        fontFamily: 'monospace',
+      }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>⚡</div>
+        <div style={{
+          fontFamily: "'Luckiest Guy', cursive", fontSize: 18,
+          color: '#FF4D6D', letterSpacing: 2, marginBottom: 16,
+        }}>
+          FIREBASE NON CONFIGURÉ
+        </div>
+        <div style={{ fontSize: 12, color: '#9A93C7', lineHeight: 1.9, textAlign: 'left' }}>
+          <div style={{ color: '#B4FF3A', marginBottom: 8 }}>
+            Sur Vercel → Settings → Environment Variables, ajoute :
+          </div>
+          {[
+            'VITE_FIREBASE_API_KEY',
+            'VITE_FIREBASE_AUTH_DOMAIN',
+            'VITE_FIREBASE_PROJECT_ID',
+            'VITE_FIREBASE_STORAGE_BUCKET',
+            'VITE_FIREBASE_MESSAGING_SENDER_ID',
+            'VITE_FIREBASE_APP_ID',
+          ].map(k => (
+            <div key={k} style={{ color: '#FFC93C' }}>{k}</div>
+          ))}
+          <div style={{ color: '#9A93C7', marginTop: 10 }}>
+            Puis clique <strong style={{ color: '#fff' }}>Redeploy</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const TABS = [
   { id: 'home',  label: 'LOBBY',  Icon: IconHome },
@@ -72,7 +115,7 @@ function SyncDot({ syncing }) {
   )
 }
 
-export default function App() {
+function AppInner() {
   const [tab, setTab] = useState('home')
   const [levelUpAnim, setLevelUpAnim] = useState(false)
   const { user, error, loading: authLoading, loginGoogle, loginEmail, registerEmail, logout } = useAuth()
@@ -239,4 +282,9 @@ export default function App() {
       <TabBar active={tab} onChange={setTab} />
     </div>
   )
+}
+
+export default function App() {
+  if (FIREBASE_CONFIG_MISSING) return <FirebaseConfigScreen />
+  return <AppInner />
 }
