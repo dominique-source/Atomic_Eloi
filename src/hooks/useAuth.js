@@ -11,7 +11,12 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase.js'
 
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+// Brave détecte comme Desktop mais bloque les popups OAuth — redirect est plus fiable universellement
+const useRedirect = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || isBrave()
+
+function isBrave() {
+  try { return !!navigator.brave } catch { return false }
+}
 
 export function useAuth() {
   const [user, setUser] = useState(undefined)
@@ -30,9 +35,17 @@ export function useAuth() {
   async function loginGoogle() {
     setLoading(true); setError(null)
     try {
+      if (useRedirect) {
+        await signInWithRedirect(auth, googleProvider)
+        return
+      }
       await signInWithPopup(auth, googleProvider)
     } catch (e) {
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || isMobile) {
+      if (
+        e.code === 'auth/popup-blocked' ||
+        e.code === 'auth/popup-closed-by-user' ||
+        e.code === 'auth/cancelled-popup-request'
+      ) {
         try { await signInWithRedirect(auth, googleProvider) }
         catch (e2) { setError(e2.message); setLoading(false) }
       } else { setError(e.message); setLoading(false) }
