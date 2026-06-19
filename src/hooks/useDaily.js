@@ -35,22 +35,28 @@ function buildFreshDay(saved) {
 export function useDaily(userId) {
   const [state, setState] = useState(null)
   const [syncing, setSyncing] = useState(false)
+  const [firestoreError, setFirestoreError] = useState(null)
   const saveTimeout = useRef(null)
 
   useEffect(() => {
     if (!userId) { setState(null); return }
+    setFirestoreError(null)
     const ref = doc(db, 'users', userId, 'data', 'daily')
     const unsub = onSnapshot(ref, (snap) => {
+      setFirestoreError(null)
       const saved = snap.exists() ? snap.data() : null
       const today = todayStr()
       if (!saved || saved.date !== today) {
         const fresh = buildFreshDay(saved)
         setState(fresh)
-        setDoc(ref, serializeState(fresh)).catch(console.error)
+        setDoc(ref, serializeState(fresh)).catch(e => setFirestoreError(e.message))
       } else {
         setState({ ...saved, challenges: getDailyChallenges(today) })
       }
-    }, (err) => console.error('Firestore error:', err))
+    }, (err) => {
+      console.error('Firestore error:', err)
+      setFirestoreError(err.message)
+    })
     return unsub
   }, [userId])
 
@@ -132,6 +138,8 @@ export function useDaily(userId) {
   return {
     state,
     syncing,
+    firestoreError,
+    loading: userId != null && state === null && !firestoreError,
     date: state?.date,
     challenges: state?.challenges ?? [],
     completed: state?.completed ?? [],

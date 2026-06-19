@@ -28,7 +28,7 @@ function VictoryConfetti() {
   )
 }
 
-export default function MissionList({ challenges, completed, progress, onComplete, onTickRep }) {
+export default function MissionList({ challenges, completed, progress, onComplete, onTickRep, loading, firestoreError }) {
   const [showConfetti, setShowConfetti] = useState(false)
   const allDone = challenges.length > 0 && completed.length >= challenges.length
 
@@ -57,9 +57,45 @@ export default function MissionList({ challenges, completed, progress, onComplet
           color: completed.length >= 3 ? 'var(--lime)' : 'var(--muted)',
           textShadow: completed.length >= 3 ? '0 0 10px var(--lime)' : 'none',
         }}>
-          {completed.length}/{challenges.length}
+          {challenges.length > 0 ? `${completed.length}/${challenges.length}` : ''}
         </div>
       </div>
+
+      {/* Firestore error */}
+      {firestoreError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{
+            background: 'rgba(255,77,109,0.12)', border: '1px solid #FF4D6D',
+            borderRadius: 8, padding: '14px 16px', marginBottom: 16,
+            fontFamily: 'var(--font-mono)', fontSize: 10, color: '#FF4D6D', lineHeight: 1.7,
+          }}>
+          <div style={{ marginBottom: 4, fontWeight: 700 }}>⚠ CONNEXION FIRESTORE ÉCHOUÉE</div>
+          <div style={{ color: 'var(--muted)' }}>
+            {firestoreError.includes('permission') || firestoreError.includes('PERMISSION')
+              ? 'Règles Firestore bloquantes. Va dans Firebase Console → Firestore → Règles et autorise l\'accès authentifié.'
+              : firestoreError.includes('not-found') || firestoreError.includes('database')
+              ? 'Base de données Firestore introuvable. Crée-la dans Firebase Console → Firestore Database → Créer une base.'
+              : firestoreError}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Loading skeleton */}
+      {loading && !firestoreError && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3, 4, 5].map(i => (
+            <motion.div key={i}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+              style={{
+                height: 100, borderRadius: 8, background: 'var(--card)',
+                border: '1px solid var(--border)',
+              }} />
+          ))}
+        </div>
+      )}
 
       {/* All-done Victory Royale banner */}
       <AnimatePresence>

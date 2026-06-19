@@ -123,6 +123,7 @@ function AppInner() {
   const {
     challenges, completed, progress, totalXP, streak,
     xpHistory, zoneHistory, completeChallenge, tickRep, syncing,
+    loading: dailyLoading, firestoreError,
   } = useDaily(user?.uid)
 
   const level = getLevel(totalXP)
@@ -258,6 +259,8 @@ function AppInner() {
                 progress={progress}
                 onComplete={handleComplete}
                 onTickRep={tickRep}
+                loading={dailyLoading}
+                firestoreError={firestoreError}
               />
             </motion.div>
           )}
