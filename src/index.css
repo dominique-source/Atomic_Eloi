@@ -1,0 +1,44 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #15103A;
+  --bg2:     #1E1550;
+  --bg3:     #2A1F6B;
+  --accent:  #00E0FF;
+  --lime:    #B4FF3A;
+  --purple:  #9B5CFF;
+  --gold:    #FFC93C;
+  --red:     #FF4D6D;
+  --blue:    #2BD9FF;
+  --card:    #221A55;
+  --border:  rgba(155,92,255,0.30);
+  --text:    #FFFFFF;
+  --muted:   #9A93C7;
+  --font-display: 'Luckiest Guy', cursive;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { overflow-x: hidden; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+}
+
+a { text-decoration: none; color: inherit; }
